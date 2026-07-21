@@ -1,30 +1,30 @@
-# P-proto-codex-integration - Three shapes for Codex (skill / plugin / MCP)
+# P-proto-codex-integration - One MCP shape, not three (skill+plugin+MCP was over-engineering)
 > Type: implementation-path
 > Scope: tool:proto
 > Confidence: validated
-> Source: protocol-forge Codex integration design session (2026-07-21)
+> Source: protocol-forge Codex integration session + community survey (2026-07-21)
 
 ## Symptom
-Users want proto to "just work" in Codex like other skills (agent calls it anytime, no manual shell), and to link with Codex's left-side session-summary strip; the skill-only install feels too manual and there is no obvious integration point.
+Tempting to ship three integration shapes (skill-only + Codex plugin + MCP server) for "flexibility". Maintaining all three is over-engineering and diverges from community precedent.
 
 ## Context
-Codex supports plugins (`.codex-plugin/plugin.json` with skills/mcpServers/apps), MCP servers (stdio child, on-demand, not daemon), and automations (scheduled/thread-wakeup). The left-side summary strip is Codex-owned UI state with no public extension feed (no API/manifest/file/MCP contract). No documented `SESSION-END` event exists.
+Surveyed GitHub agent-memory / experience-capture projects (memorizer 178*, agent-memory-mcp, linksee-memory, ...): they ship as a single MCP server, no platform-plugin parallel. Codex plugin scaffold is Codex-private (no cross-client value). Codex's summary strip is private UI (no extension feed). No native SESSION-END event.
 
 ## Diagnosis
-Split integration into three shapes sharing one engine. The skill is the entry surface; the MCP server is the execution core (on-demand stdio, no daemon); the plugin wraps both for discovery + composer prompts. Do NOT target the summary strip -- produce the right summary content instead. Drive session-end retrospect via the agent rule (already in SKILL.md) plus optional automations, since there is no native SESSION-END event.
+The MCP server is the execution core; SKILL.md is the behavior layer that says when to call it. That pair already covers everything. A plugin scaffold only adds Codex discovery (covered by a one-line MCP config) at the cost of platform lock-in + maintenance. Three shapes is over-engineering; one (MCP + SKILL.md) is the community-aligned answer.
 
 ## Protocol
-1. Skill-only: `install_skill.ps1 -Both` (engine + scripts, no packaging).
-2. Plugin: scaffold with plugin-creator, validate with `validate_plugin.py`; manifest points skills + .mcp.json.
-3. MCP: `scripts/mcp_proto.py` (stdio JSON-RPC 2.0); tools: collect_trace, preflight, lint_protocols, inbox_status, retrospect, pack_export/import. Launch on-demand; never daemonize.
-4. Summary strip: do not inject; let `retrospect` produce standard Markdown the agent surfaces.
-5. Session-end: agent self-proposes retrospect (SKILL.md rule) + optional Codex automation polling `inbox_status`.
+1. Ship one MCP server (`scripts/mcp_proto.py`, stdio, on-demand, zero-dep) with 7 tools.
+2. Keep SKILL.md as the behavior layer (when to preflight / collect / retrospect / honest-grade); it is NOT an alternative to MCP -- it drives the MCP tools.
+3. Configure via the client's MCP config (one line); do not ship a plugin scaffold or marketplace entry.
+4. `retrospect` produces standard Markdown (do not target Codex's private summary strip).
+5. Session-end: agent self-proposes (SKILL.md rule) + optional automation polling inbox_status.
 
 ## Validation
-`validate_plugin.py proto-plugin` passes. MCP server responds correctly to initialize/tools/list/tools/call (inbox_status, preflight, lint_protocols verified). All shapes read the same `$PROTO_STORE`.
+MCP server responds to initialize/tools/list/tools/call (inbox_status, preflight, lint verified). All clients reading the same $PROTO_STORE. No plugin scaffold to maintain.
 
 ## Avoid
-Don't try to feed Codex's summary strip -- it is private UI state, no extension feed. Don't make the MCP server a persistent daemon -- it breaks proto's no-resident-process design. Don't duplicate the engine per shape -- one engine, three wrappers.
+Don't ship a Codex plugin parallel to the MCP server -- it is platform-private, redundant with a one-line MCP config, and not what the community does. Don't make the MCP server a daemon. Don't try to feed Codex's summary strip.
 
 ## Promotion
-Encoded in `references/codex-integration.md`, `scripts/mcp_proto.py`, `proto-plugin/`. This file is the rationale reference.
+Encoded in `references/codex-integration.md` and `scripts/mcp_proto.py`. This file is the rationale and the anti-over-engineering record.

@@ -1,28 +1,10 @@
-# Codex Integration: Plugin + MCP
+# Codex / MCP Integration
 
-Proto ships three integration shapes for Codex (and any MCP client). They share one engine; pick by how much ceremony you want.
+Proto integrates with Codex (and any MCP client) as **one shape**: an on-demand stdio **MCP server**. No separate plugin scaffold, no per-platform packaging. The community standard for agent-memory / experience-capture tools (memorizer, agent-memory-mcp, linksee-memory, ...) is uniformly "an MCP server" -- proto follows that precedent rather than maintaining three parallel shapes.
 
-## 1. Skill-only (already installed)
+## The one shape: MCP server (`scripts/mcp_proto.py`)
 
-`~/.codex/skills/proto` and `~/.claude/skills/proto`. The agent reads `SKILL.md` and runs `scripts/*.py` directly. Zero packaging. This is what `install_skill.ps1` sets up. Use this if you only want the engine and are happy invoking scripts by path.
-
-## 2. Codex plugin (`proto-plugin/`)
-
-A discoverable Codex plugin that wraps the skill and adds a UI entry (displayName, defaultPrompt, brandColor). Built with the `plugin-creator` skill; validated by `validate_plugin.py`.
-
-```
-proto-plugin/
-  .codex-plugin/plugin.json   # manifest: skills + mcpServers + interface
-  .mcp.json                   # launches the MCP server (see #3)
-  skills/proto/SKILL.md       # thin entry surface: when to call which tool
-  assets/
-```
-
-Install via the personal marketplace (`.agents/plugins/marketplace.json`) or `codex plugin marketplace add <repo>`. The plugin's value is discovery + the composer starter prompts; execution still flows through the MCP server.
-
-## 3. MCP server (`scripts/mcp_proto.py`)
-
-The execution core. A stdio JSON-RPC 2.0 server launched **on demand** as a child process by the MCP client -- not a daemon, not persistent. Any MCP-capable client (Codex, Claude Code, others) gets the same tools:
+A stdio JSON-RPC 2.0 server, launched **on demand** as a child process by the MCP client. Not a daemon, not persistent, zero dependencies.
 
 | Tool | Role |
 |---|---|
@@ -33,34 +15,35 @@ The execution core. A stdio JSON-RPC 2.0 server launched **on demand** as a chil
 | `retrospect` | gather cheap material for a session retrospect (LLM synthesis stays in the agent) |
 | `pack_export` / `pack_import` | share protocols as a pack |
 
-Configure in `.mcp.json`:
+Configure it in your client's MCP config (Codex `~/.codex/config.toml` or `.mcp.json`; Claude Code `~/.claude/mcp.json`):
+
 ```json
 {
   "mcpServers": {
     "proto": {
       "type": "local",
       "command": "python",
-      "args": ["${workspaceFolder}/scripts/mcp_proto.py"],
-      "env": { "PROTO_STORE": "${env:HOME}/.protocols" }
+      "args": ["/absolute/path/to/protocol-forge/scripts/mcp_proto.py"],
+      "env": { "PROTO_STORE": "~/.protocols" }
     }
   }
 }
 ```
 
+## What about the skill's `SKILL.md`?
+
+The MCP server is the **execution core**; it does not know *when* to call itself. The `SKILL.md` (installed at `~/.codex/skills/proto` / `~/.claude/skills/proto`) is the **behavior layer**: it tells the agent to call `preflight` before risky ops, `collect_trace` on any failure, `retrospect` at session end, and to honest-grade confidence. So the integration is "SKILL.md rules + MCP tools", not "skill OR MCP". The skill-only install (`install_skill.ps1`) already deploys the SKILL.md; adding the MCP server config is the one extra line for clients that want tool-call access.
+
 ## What about Codex's left-side summary strip?
 
-Researched via the official Codex manual: that strip is **Codex-owned UI state with no public extension feed** (no API, manifest field, file contract, or MCP mechanism to populate it). So proto does not try to inject into it. Instead, proto's `retrospect` produces a standard Markdown summary that the agent can surface in chat; the user or Codex can treat it as the session summary. "Linking with the strip" = producing the right summary content, not hijacking the UI.
+Researched via the official Codex manual: that strip is **Codex-owned UI state with no public extension feed** (no API, manifest field, file contract, or MCP mechanism to populate it). So proto does not inject into it. `retrospect` produces a standard Markdown summary the agent surfaces in chat; the user/Codex treats it as the session summary. "Linking with the strip" = producing the right content, not hijacking the UI.
 
 ## Session-end triggering
 
-Codex has **no documented `SESSION-END` event**. Two ways proto still self-drives:
-- **Agent rule** (in `SKILL.md`, already added): the agent proposes `retrospect` when the inbox hits the gate or at a substantial session boundary.
-- **Codex automations** (scheduled/thread-wakeup): optionally register a recurring check that calls `inbox_status` and proposes distillation when the gate is crossed.
+Codex has **no documented `SESSION-END` event**. Proto self-drives two ways:
+- **Agent rule** (in `SKILL.md`): the agent proposes `retrospect` when `inbox_status` crosses the gate (>= 10) or at a substantial session boundary.
+- **Optional Codex automation**: a scheduled/thread-wakeup check that calls `inbox_status` and proposes distillation when the gate is crossed.
 
-## Which shape to use
+## Why not also ship a plugin?
 
-- **Just want it to work, minimal**: skill-only (`install_skill.ps1 -Both`).
-- **Want Codex discovery + composer prompts**: install the plugin (it pulls in the MCP server).
-- **Non-Codex client or want raw tool access**: point your MCP client at `scripts/mcp_proto.py` directly.
-
-All three read the same `$PROTO_STORE`; the protocol library is the single source of truth regardless of integration shape.
+Researched and rejected: the plugin scaffold (`.codex-plugin/plugin.json` + marketplace entry) is Codex-private, adds maintenance, and buys only discovery + composer prompts -- which a one-line MCP config already covers. The community ships experience-capture as MCP, not as platform plugins. One shape is easier to maintain and works across clients.
