@@ -28,6 +28,8 @@ Known-risky operations (extend as protocols accumulate): `git push` / `git push 
 
 If you hit a symptom a protocol already describes, that protocol failed to prevent a recurrence. Strengthen its trigger-keywords or promote it to a `SKILL.md` rule; do not just re-solve the problem. Full procedure in `references/routing.md`.
 
+**MCP-first.** When proto is configured as an MCP server (see eferences/codex-integration.md), prefer the structured tool calls over shelling out to scripts: call mcp__proto__preflight (returns the matched protocols as structured data) instead of running python scripts/preflight.py; call mcp__proto__collect_trace on failure instead of the shell; mcp__proto__inbox_status as the distill gate; mcp__proto__lint_protocols to validate; mcp__proto__retrospect for session-end material; mcp__proto__pack_export/pack_import to share. The scripts remain as a fallback for non-MCP clients and for piping in shells -- both read the same $PROTO_STORE, so results are identical.
+
 ## Operating Modes
 
 Choose one mode before writing:
@@ -120,7 +122,8 @@ A protocol is a portable unit. A *protocol pack* = a folder of P-*.md + an INDEX
 
 ## Session-End Capture
 
-At the end of substantial work, run etrospect (the agent self-proposes this if it has not already). Capture:
+At the end of substantial work, run 
+etrospect (the agent self-proposes this if it has not already). Capture:
 
 1. Top repeated errors or time sinks.
 2. Implementation decisions future agents must preserve.
