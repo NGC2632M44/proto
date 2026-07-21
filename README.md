@@ -1,5 +1,8 @@
 # PROTO
 
+**[English](./README.en.md)** · 中文
+
+
 > **吃一堑,长一智。把工作经验沉淀成最小可复用单元,少造重复的轮子。**
 
 Every engineering session leaks value: the same error is diagnosed three times by three different agents; the same decision tree is rebuilt because nothing recorded *why* a route worked. **PROTO** compresses lived work into the **protocol** — the smallest repeatable unit a future agent can execute without re-reading the original conversation — and only escalates a unit's visibility when its recurrence earns it.
