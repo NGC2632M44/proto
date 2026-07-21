@@ -104,11 +104,15 @@ When creating a shareable skill, remove project secrets, local absolute paths, p
 
 ## Collect -> Distill (Auto-Capture)
 
-Manual $proto extract leaks most pitfalls; always-on LLM summarization is a token sink. Split them: **collect** raw traces (command + exit + 鈮?8 stderr lines) into $PROTO_STORE/inbox/ on cheap signals 鈥?nonzero exit, known error regex (InputValidationError, GBK/UnicodeDecodeError, schannel, gh 403/422, 	imeout), or preflight NO_MATCH-then-fail / recurrence 鈥?via scripts/collect_trace.py, no model call. **Distill** in batches on explicit extract, an inbox-size gate (ls | wc), or session-end etrospect. Validity gate: the distilled protocol must replay-match the trace that birthed it (preflight must route the trace back to it). Full procedure in eferences/auto-capture.md.
+Manual $proto extract leaks most pitfalls; always-on LLM summarization is a token sink. Split them: **collect** raw traces (command + exit + up to 8 stderr lines) into $PROTO_STORE/inbox/ on cheap signals — nonzero exit, known error regex (InputValidationError, GBK/UnicodeDecodeError, schannel, gh 403/422, timeout), or preflight NO_MATCH-then-fail / recurrence — via scripts/collect_trace.py, no model call. **Distill** in batches on explicit extract, an inbox-size gate (ls | wc), or session-end retrospect. Validity gate: the distilled protocol must replay-match the trace that birthed it (preflight must route the trace back to it). Full procedure in references/auto-capture.md.
 
+**Agent self-collection (AFK by design).** Collection must NOT depend on a human at an interactive shell. The agent itself, whenever it runs a command that exits nonzero OR when preflight returns NO_MATCH-then-fail OR when a known error regex matches, MUST call scripts/collect_trace.py on that operation before moving on. This is the same collector the PowerShell hook uses — both feed the same inbox, so experience from human-typed failures and agent-executed failures converges in one store. The user can be fully AFK.
+
+**Self-driven distillation.** The agent proposes (does not force) distillation when (a) the user asks, (b) the inbox holds >= 10 traces, or (c) a substantial session is ending. On each proposal, report the count and a one-line cluster summary; run extract only after the user acknowledges or at session end. Never run the LLM on every single error — that is the token sink this section exists to prevent.
 ## Cross-Runtime Store
 
-A protocol learned in Claude Code should protect the next Codex session. Keep one canonical store at $PROTO_STORE (default ~/.protocols) holding protocols/ and inbox/; mount it into each runtime''s proto skill via junction/symlink, or let preflight.py route there via the env var. scripts/sync_store.* (re)link runtimes and optionally git pull/push for cross-machine + community sync. Engine (SKILL.md/scripts) stays per-runtime; only the fuel is shared. See eferences/cross-runtime.md.
+A protocol learned in Claude Code should protect the next Codex session. Keep one canonical store at $PROTO_STORE (default ~/.protocols) holding protocols/ and inbox/; mount it into each runtime''s proto skill via junction/symlink, or let preflight.py route there via the env var. scripts/sync_store.* (re)link runtimes and optionally git pull/push for cross-machine + community sync. Engine (SKILL.md/scripts) stays per-runtime; only the fuel is shared. See 
+eferences/cross-runtime.md.
 
 ## Sharing Protocols
 
@@ -116,16 +120,16 @@ A protocol is a portable unit. A *protocol pack* = a folder of P-*.md + an INDEX
 
 ## Session-End Capture
 
-At the end of substantial work, capture:
+At the end of substantial work, run etrospect (the agent self-proposes this if it has not already). Capture:
 
 1. Top repeated errors or time sinks.
 2. Implementation decisions future agents must preserve.
 3. Environment and harness constraints.
 4. Tests, builds, screenshots, or commands that validated the work.
 5. Protocols to draft, merge, promote, or discard — and any recurrence where a protocol should have fired but didn't.
+6. **Honest grading check:** for every protocol touched this session, confirm its Confidence matches the evidence — downgrade any alidated that was not reproduced/tested, any observed that was only a guess. A protocol that never gets hit by preflight (replay-match failure) is an automatic downgrade-to-draft signal.
 
 Prefer a short protocol index plus focused protocol files over one long memoir.
-
 ## Output Rules
 
 When asked for protocols, produce concise Markdown following `references/protocol-schema.md`.
