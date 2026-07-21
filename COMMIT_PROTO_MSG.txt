@@ -1,0 +1,15 @@
+Add cross-runtime store, auto-capture, and fix preflight regex
+
+- references/cross-runtime.md + scripts/sync_store.{ps1,sh}: one canonical
+  protocol store ($PROTO_STORE) mounted into each runtime's skill via
+  junction/symlink or env override, so Claude Code and Codex share fuel.
+- references/auto-capture.md + scripts/collect_trace.py: split always-on
+  cheap trace collection from on-demand LLM distillation, with a
+  replay-match validity gate (preflight must route the birth trace back).
+- scripts/preflight.py: honor PROTO_STORE; fix corrupted INDEX_RE that
+  broke all routing (em-dash variant class lost its closing bracket).
+- SKILL.md: add co-trigger-vs-thematic composition rule, collect->distill,
+  cross-runtime store, and sharing/marketplace sections.
+- Two dogfooded protocols (P-proto-collect-distill-split,
+  P-proto-shared-protocol-store) + INDEX entries.
+- README: document cross-runtime sync, auto-capture, sharing roadmap.

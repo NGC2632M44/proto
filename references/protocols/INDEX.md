@@ -14,6 +14,8 @@ Living index of extracted protocols. Each entry is one atomic, reusable unit fol
 
 ## anti-pattern
 - [P-protocol-lint-scope](./P-protocol-lint-scope.md) — [protocol_lint, lint, false-positive, P-prefix, scope] Gate the protocol linter on the `P-*.md` filename convention, not just the `.md` extension; schema/prose/README are not protocols.
+- [P-proto-collect-distill-split](./P-proto-collect-distill-split.md) — [proto, auto-capture, collect, distill, inbox, trace, token-cost] Split always-on cheap trace collection from on-demand LLM distillation; closed-loop replay match validates a distilled protocol.
+- [P-proto-shared-protocol-store](./P-proto-shared-protocol-store.md) — [proto, cross-runtime, PROTO_STORE, junction, symlink, cc, codex, sync] One canonical protocol store mounted into each runtime's skill; engine per-runtime, fuel shared.
 
 ---
 

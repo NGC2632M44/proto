@@ -36,7 +36,10 @@ This repository is the canonical skill package: a single self-contained folder y
 - [9. Repository Layout](#9-repository-layout)
 - [10. Conventions & Privacy](#10-conventions--privacy)
 - [11. Contributing](#11-contributing)
-- [12. License](#12-license)
+- [12. Cross-Runtime Sync](#12-cross-runtime-sync)
+- [13. Auto-Capture](#13-auto-capture)
+- [14. Sharing Protocols (Roadmap)](#14-sharing-protocols-roadmap)
+- [15. License](#15-license)
 
 ---
 
@@ -230,7 +233,30 @@ Contributions that **add or harden protocols** are welcome. Before opening a PR:
 
 When protocols conflict, keep both only if each has a distinct context; otherwise prefer the newer validated protocol and record why the older rule is superseded.
 
-## 12. License
+## 12. Cross-Runtime Sync
+
+A protocol learned in Claude Code should protect the next Codex session. Keep **one canonical store** at $PROTO_STORE (default ~/.protocols) holding protocols/ (P-*.md + INDEX) and inbox/. Mount it into each runtime''s proto skill eferences/protocols via a junction (Windows, no admin) or symlink (POSIX); or let preflight.py route there via the PROTO_STORE env var without a link.
+
+- scripts/sync_store.ps1 / sync_store.sh re-establish mounts across ~/.claude/skills/proto and ~/.codex/skills/proto, with optional git pull/push for cross-machine and community sync.
+- The skill **engine** (SKILL.md / scripts) stays versioned per-runtime (small, stable); only the **fuel** (protocols) is shared. Writes from either runtime land in one store, so a trigger-keyword learned in Codex immediately protects a Claude Code session.
+
+Full procedure and pitfalls: [eferences/cross-runtime.md](./references/cross-runtime.md).
+
+## 13. Auto-Capture
+
+Manual $proto extract leaks most pitfalls; always-on LLM summarization is a token sink. PROTO splits the two:
+
+- **Collect (cheap, always-on, no LLM).** scripts/collect_trace.py appends a raw trace (command + exit + up to 8 stderr lines + cwd + runtime + ts) to $PROTO_STORE/inbox/ on cheap signals: nonzero exit, known error regex (InputValidationError, GBK/UnicodeDecodeError, schannel, gh 403/422, 	imeout), or preflight NO_MATCH-then-fail / recurrence.
+- **Distill (LLM, on-demand, batched).** $proto extract runs on the inbox only on explicit request, an inbox-size gate (ls | wc, no LLM), or session-end etrospect with a bounded budget.
+- **Validity gate (closed loop).** A distilled protocol must (1) pass protocol_lint.py, (2) be applicable without the original chat, and (3) **replay-match**: preflight.py run on the captured trace must route back to the protocol that distilled it. Failing check 3 means the trigger-keywords are wrong and it will never fire 鈥?fix the keywords, not the trace.
+
+Full procedure and signal list: [eferences/auto-capture.md](./references/auto-capture.md).
+
+## 14. Sharing Protocols (Roadmap)
+
+A protocol is a portable unit. A *protocol pack* = a folder of P-*.md + an INDEX.md snippet + provenance (Source, Confidence). Publish a pack as a git repo; consumers import it by merging files into their $PROTO_STORE/protocols/ and re-keying trigger-keywords on collision. Skills stay public-facing and deliberate 鈥?composition proposes, the human publishes. The marketplace direction: protocol packs as the community currency, composed into per-user skills.
+
+## 15. License
 
 MIT © [NGC2632M44](https://github.com/NGC2632M44). See [`LICENSE`](./LICENSE).
 

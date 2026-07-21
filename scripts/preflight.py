@@ -14,13 +14,14 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
 
 
 INDEX_RE = re.compile(
-    r"^\s*-\s*\[([^\]]+)\]\(([^)]+)\)\s*[-—]\s*\[([^\]]*)\](.*)$"
+    r"^\s*-\s*\[([^\]]+)\]\(([^)]+)\)\s*[-\u2014\u2013]\s*\[([^\]]*)\](.*)$"
 )
 
 # Generic words that appear in many operations and must NOT trigger a match
@@ -134,6 +135,8 @@ def main() -> int:
 
     if args.index is not None:
         index_path = args.index
+    elif os.environ.get("PROTO_STORE"):
+        index_path = Path(os.environ["PROTO_STORE"]) / "protocols" / "INDEX.md"
     else:
         index_path = (
             Path(__file__).resolve().parent.parent
@@ -164,8 +167,8 @@ def run_self_test() -> int:
     sample_index = """# Index
 
 ## environment
-- [P-win-git-push-retry](./P-win-git-push-retry.md) — [git-push, force-push, 443, schannel, proxy] transient push failures.
-- [P-gh-repo-create-remote](./P-gh-repo-create-remote.md) — [gh, gh-repo-create, remote, origin] cosmetic remote failure.
+- [P-win-git-push-retry](./P-win-git-push-retry.md) - [git-push, force-push, 443, schannel, proxy] transient push failures.
+- [P-gh-repo-create-remote](./P-gh-repo-create-remote.md) - [gh, gh-repo-create, remote, origin] cosmetic remote failure.
 """
     tmp = Path(__file__).resolve().parent / "_selftest_INDEX.md"
     tmp.write_text(sample_index, encoding="utf-8")

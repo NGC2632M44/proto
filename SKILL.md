@@ -102,6 +102,18 @@ When protocols conflict, keep both only if each has a distinct context. Otherwis
 
 When creating a shareable skill, remove project secrets, local absolute paths, personal tokens, raw conversation history, and environment-specific assumptions unless they are the point of the skill.
 
+## Collect -> Distill (Auto-Capture)
+
+Manual $proto extract leaks most pitfalls; always-on LLM summarization is a token sink. Split them: **collect** raw traces (command + exit + 鈮?8 stderr lines) into $PROTO_STORE/inbox/ on cheap signals 鈥?nonzero exit, known error regex (InputValidationError, GBK/UnicodeDecodeError, schannel, gh 403/422, 	imeout), or preflight NO_MATCH-then-fail / recurrence 鈥?via scripts/collect_trace.py, no model call. **Distill** in batches on explicit extract, an inbox-size gate (ls | wc), or session-end etrospect. Validity gate: the distilled protocol must replay-match the trace that birthed it (preflight must route the trace back to it). Full procedure in eferences/auto-capture.md.
+
+## Cross-Runtime Store
+
+A protocol learned in Claude Code should protect the next Codex session. Keep one canonical store at $PROTO_STORE (default ~/.protocols) holding protocols/ and inbox/; mount it into each runtime''s proto skill via junction/symlink, or let preflight.py route there via the env var. scripts/sync_store.* (re)link runtimes and optionally git pull/push for cross-machine + community sync. Engine (SKILL.md/scripts) stays per-runtime; only the fuel is shared. See eferences/cross-runtime.md.
+
+## Sharing Protocols
+
+A protocol is a portable unit. A *protocol pack* = a folder of P-*.md + an INDEX.md snippet + provenance (Source, Confidence). To share: publish the pack as a git repo; consumers import it by merging files into their $PROTO_STORE/protocols/ and re-keying trigger-keywords if they collide. Keep skills public-facing and deliberate 鈥?never auto-publish a composed skill. Marketplace direction: protocol packs as the community currency, composed into skills per-user.
+
 ## Session-End Capture
 
 At the end of substantial work, capture:
