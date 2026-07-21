@@ -54,13 +54,21 @@ Keep as draft | add to reference | add to SKILL.md | turn into script | merge wi
 - `validated`: Reproduced, tested, or seen repeatedly.
 - `promoted`: Already encoded in `SKILL.md`, a reference, or a script.
 
+## Trigger-Keyword Tags (required in INDEX, optional in file)
+
+Routing is by keyword, not text. Each protocol's INDEX entry must carry a bracketed keyword set so Preflight can match on intent. Example INDEX line:
+
+`- [P-win-json-path](./P-win-json-path.md) — [json, windows-path, InputValidationError, backslash] Windows paths break JSON tool params.`
+
+Choose keywords a future agent would literally type or see: tool names, command names, error fragments, platform names. 3-6 keywords per protocol.
+
 ## Quality Bar
 
 A protocol is ready when a future agent can apply it without reading the original chat.
 
 It must have:
 
-- A visible trigger.
+- A visible trigger (and trigger-keywords in INDEX).
 - A scoped context.
 - A causal diagnosis or decision rationale.
 - A concrete action path.
@@ -68,6 +76,8 @@ It must have:
 - An avoid list when the failure came from a tempting mistake.
 
 ## Compression Rules
+
+**Terse by default.** 1-3 lines per section. Quote only the short error text needed for recognition. A protocol is preloaded on every recurrence — length is a recurring token tax. Aim ≤ ~20 lines per file.
 
 Split when one note has multiple triggers, tools, or validation paths.
 
@@ -104,10 +114,10 @@ Tool calls fail with `InputValidationError` when a Windows path appears in a JSO
 Windows paths inside tool parameters, especially `C:/Users/...` (use forward slashes everywhere).
 
 ## Diagnosis
-Single backslashes are parsed as JSON escapes such as `\U`.
+Single backslashes are parsed as JSON escapes such as `\\U`.
 
 ## Protocol
-Use forward slashes in all tool parameters: `C:/Users/name/project`. If native backslashes are required inside code, construct them inside the script with `chr(92)` or escape them as `\\`.
+Use forward slashes in all tool parameters: `C:/Users/name/project`. If native backslashes are required inside code, construct them inside the script with `chr(92)` or escape them as `\\\\`.
 
 ## Validation
 The same tool call parses and reaches the shell or file operation.

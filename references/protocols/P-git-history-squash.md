@@ -5,28 +5,28 @@
 > Source: protocol-forge public release session
 
 ## Symptom
-A local repo has multiple commits that reveal the work's evolution (e.g. "Initial commit: <old name>" followed by "Rename skill to X and prepare for public release"). For a published skill repo, these traces read as noise and leak the project's history of renaming and editing.
+Multiple commits reveal the work's evolution (e.g. "Initial commit: <old name>" then "Rename skill to X"). For a public skill repo this is noise.
 
 ## Context
-A skill repo about to be pushed to a public GitHub remote, where the audience is users of the skill, not readers of its commit history. The working tree is already in its final desired state. A second clean commit (or any non-trivial history) is not required by the content.
+Skill repo about to be pushed publicly; working tree already final; non-interactive harness (no `git rebase -i`).
 
 ## Diagnosis
-Commit history is content the audience did not ask for. `git rebase -i` is unavailable in non-interactive environments, and `git commit --amend` only rewrites the tip. The durable, scriptable way to produce a single clean "Initial commit" is to build a fresh rootless branch that contains only the current tree, then force-push it over the remote branch.
+History is content the audience didn't ask for. `rebase -i` is unavailable; `--amend` only rewrites the tip. A single clean root requires a rootless branch holding only the current tree, force-pushed.
 
 ## Protocol
-1. Ensure the working tree is the final state and nothing is uncommitted: `git status` must be clean (or stage everything first).
-2. Confirm the desired author identity: `git config user.name` / `user.email` (use the platform noreply email for public skill repos).
-3. Create a rootless branch with the current files: `git checkout --orphan tmp-clean`.
-4. Commit once: `git commit -m "Initial commit"`.
-5. Replace the published branch: `git branch -D main` then `git branch -m tmp-clean main`.
-6. Overwrite the remote: `git push --force origin main`.
-7. Verify on the host API: `gh api repos/<owner>/<repo>/commits --jq 'length'` returns 1.
+1. Confirm tree is final and clean: `git status`.
+2. Confirm author identity (`user.name`/`user.email`, noreply for public skill repos).
+3. `git checkout --orphan tmp-clean`.
+4. `git commit -m "Initial commit"`.
+5. `git branch -D main && git branch -m tmp-clean main`.
+6. `git push --force origin main` (retry on transient failure — see P-win-git-push-retry).
+7. Verify: `gh api repos/<owner>/<repo>/commits --jq 'length'` returns 1.
 
 ## Validation
-The remote shows exactly one commit with message "Initial commit", author email is the noreply address, and `gh api .../git/trees/main` lists the full final file set.
+Remote shows exactly one "Initial commit", noreply author, full file tree via `gh api .../git/trees/main`.
 
 ## Avoid
-Do not use interactive `git rebase -i` in a non-interactive harness; the command will block or error. Do not amend the tip and call it clean — the old root commit still remains in history. Do not force-push without first confirming the tree is the intended final state; a force-push cannot be undone from the working tree.
+No interactive `git rebase -i` in a non-interactive harness (blocks/errors). No amend-and-call-it-clean (old root remains). No force-push before confirming the tree is final (irreversible from working tree).
 
 ## Promotion
-Keep as a reference protocol. The seven-step sequence is too long for a SKILL.md rule and too conditional to harden into a script (it touches history, which must stay a human decision).
+Keep as reference. The 7-step sequence is too long for SKILL.md and too conditional for a script (rewrites history — must stay a human decision).
