@@ -34,3 +34,7 @@ ENV/
 # Local logs and traces (protocols keep only short quoted error text)
 *.log
 logs/
+
+
+# Local commit-message scratch file
+COMMIT_PROTO_MSG.txt
