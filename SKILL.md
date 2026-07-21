@@ -1,11 +1,15 @@
 ---
 name: proto
 description: Extract solved errors, harness pitfalls, debugging paths, implementation paths, project invariants, and handoff lessons into minimal reusable protocols, then compose mature protocols into Codex skills. Use when a user asks to summarize project work into protocols, prevent repeated tool or environment errors, create or improve a meta-skill for producing skills, convert retrospectives into reusable workflows, maintain a protocol library, or decide whether experience should become a protocol, reference, script, or skill.
+metadata:
+  short-description: Forge reusable protocols into skills
 ---
 
 # Proto
 
 Turn lived work into operational memory.
+
+> Trigger with `$proto` (Codex) or `/proto` (Claude Code) when you want to extract protocols from the current session and decide what should become a skill.
 
 A protocol is the smallest repeatable unit: one error pattern, diagnosis path, implementation route, validation rule, invariant, or handoff recipe. A skill is the execution interface that routes, selects, and applies mature protocols without loading every detail.
 
