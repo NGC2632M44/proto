@@ -1,269 +1,173 @@
-<div align="center">
-
 # PROTO
 
-### *The First Glue* — distilling high-entropy engineering context into deterministic, on-device automation.
+> **吃一堑,长一智。把工作经验沉淀成最小可复用单元,少造重复的轮子。**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-2d2d2d?style=flat-square)](./LICENSE)
-[![Codex Skill](https://img.shields.io/badge/Codex-Skill-161616?style=flat-square)](./agents/openai.yaml)
-[![Protocols](https://img.shields.io/badge/Schema-protocol--v1-3a3a3a?style=flat-square)](./references/protocol-schema.md)
-[![Python](https://img.shields.io/badge/Linter-py3.11-3674A5?style=flat-square)](./scripts/protocol_lint.py)
-[![Status](https://img.shields.io/badge/Status-stable-1f6f3b?style=flat-square)]()
+Every engineering session leaks value: the same error is diagnosed three times by three different agents; the same decision tree is rebuilt because nothing recorded *why* a route worked. **PROTO** compresses lived work into the **protocol** — the smallest repeatable unit a future agent can execute without re-reading the original conversation — and only escalates a unit's visibility when its recurrence earns it.
 
-</div>
+The result is **operational memory**: forward-looking, scoped, validated — not backward-looking narrative. It saves tokens, it saves time, and it lets experience transfer between agents, machines, and people.
 
 ---
 
-> **prōtokollon** *(πρωτόκολλον)* — *prōtos* (first) + *kolla* (glue).
-> The flyleaf pasted onto the front of a papyrus scroll: not the body of the text, but the certificate of authenticity, the summary, and the parsing contract for everything that follows.
+## 初心
 
-**PROTO** is not a tool. It is the **grammar and infrastructure** by which chaotic, high-entropy engineering context — logs, chat, diffs, handoff notes, harness failures — is distilled, parsed, and sealed into **low-entropy, on-device automation units**. Each unit is a *protocol*: the smallest repeatable unit of operational memory. Mature protocols compose into *skills*: the execution interface that routes, selects, and applies them without reloading their history.
+- **少造重复的轮子** — 同一个坑不该被踩第二次,同一个决策树不该被重搭。
+- **吃一堑,长一智** — 失败是最高信号;proto 把它固化成下次能自动加载的规则。
+- **节省 token 与时间** — 一次廉价的 preflight 读取,胜过反复重新诊断。
+- **珍惜工作经验** — 把"为什么这条路走通了"沉淀下来,而不是随会话消散。
+- **以最小单元交流分享** — protocol 是最小单位,组合成 skill,或打包成 pack 在社区流通。
 
-This repository is the canonical skill package: a single self-contained folder you can drop into a Codex skills directory, an agent workspace, or a CI checklist — and immediately start turning lived work into durable, reusable procedure.
+## 这是什么
 
----
+PROTO 是一套**把工作蒸馏成可复用记忆的引擎**,不是一个固定工具库:
 
-## Table of Contents
+- **protocol** — 最小单元。一个 trigger + 一条可复用行动路径。`P-*.md` 文件,≤~20 行。
+- **skill** — 组合多个 co-triggered protocol 的执行接口(`SKILL.md` + `references/` + `scripts/`)。
+- **pack** — 分享单元。一组 `P-*.md` + provenance,可发布成 git repo 供他人导入。
 
-- [1. Motivation](#1-motivation)
-- [2. Etymology & System Mapping](#2-etymology--system-mapping)
-- [3. Architecture](#3-architecture)
-- [4. The Protocol as an Atomic Unit](#4-the-protocol-as-an-atomic-unit)
-- [5. Installation](#5-installation)
-- [6. Quick Start](#6-quick-start)
-- [7. Lifecycle: Intake → Extract → Distill → Promote → Compose](#7-lifecycle-intake--extract--distill--promote--compose)
-- [8. Validation & Linting](#8-validation--linting)
-- [9. Repository Layout](#9-repository-layout)
-- [10. Conventions & Privacy](#10-conventions--privacy)
-- [11. Contributing](#11-contributing)
-- [12. Cross-Runtime Sync](#12-cross-runtime-sync)
-- [13. Auto-Capture](#13-auto-capture)
-- [14. Sharing Protocols (Roadmap)](#14-sharing-protocols-roadmap)
-- [15. License](#15-license)
+关键机制:**engine 与 fuel 分离**。引擎(`SKILL.md`/scripts)小而稳,按运行时安装;燃料(`P-*.md` protocols)是真正的经验,跨运行时共享一份。
 
----
+## 核心机制
 
-## 1. Motivation
-
-Every engineering session leaks value. The same error is diagnosed three times by three different agents. The same decision tree is rebuilt because nothing recorded *why* a route worked. The same fragile shell command is re-derived from memory, then subtly mis-transcribed, then breaks in production.
-
-The conventional answer is *more documentation*. PROTO rejects that. A retrospective is prose about the past; prose cannot be routed, selected, or applied. PROTO instead compresses experience into **the smallest repeatable unit that a future agent can execute without reading the original conversation** — and only escalates a unit's visibility when its recurrence earns it.
-
-The result is **operational memory**: forward-looking, scoped, and validated, not backward-looking narrative.
-
-## 2. Etymology & System Mapping
-
-> *In classical antiquity, prōtokollon denoted the flyleaf pasted onto the front of a papyrus scroll. This page carried no body text. It provided the official certificate of authenticity, a content summary, and the parsing contract for the scroll. It was the system's first drop of glue: without it, everything that followed lost its legitimacy and its reading baseline.*
-
-PROTO occupies the identical role in the engineering stack. It executes no business logic — no "body text," no Skill. It is the **a priori contract** by which the system distills, parses, and seals high-entropy context into low-entropy, on-device automation.
-
-| Classical *prōtokollon* | PROTO engineering role |
+| 机制 | 作用 |
 |---|---|
-| The flyleaf, pasted first | The skill's entry surface (`SKILL.md`) |
-| Certificate of authenticity | The **Validation** field — how success is confirmed |
-| Content summary | Trigger, scope, and promotion ladder |
-| Parsing contract | The **protocol-schema** — the grammar every unit obeys |
-| The first drop of glue | The binding between chaotic context and deterministic action |
+| **Preflight** | 已知风险操作前,花一次廉价读取预载匹配的 protocol,而不是重新踩坑。 |
+| **Collect → Distill** | 采集永远无 LLM、always-on(命令失败即记录 trace);蒸馏按需批量。 |
+| **Closed-loop validation** | 蒸馏出的 protocol 必须能被产生它的 trace 经 preflight 路由回——否则 trigger-keywords 是错的。 |
+| **Promotion ladder** | 证据越足,形式越硬:draft → observed → validated → `SKILL.md` rule → script → new skill。 |
+| **Cross-runtime store** | 一个 canonical store(`~/.protocols`),cc 和 codex 共享同一份燃料。 |
+| **Pack** | protocol 打包成可分享的单元,碰撞时自动重键关键词。 |
 
-PROTO is named to make explicit that this project establishes the **underlying grammar and infrastructure** of on-device intelligent automation. Every subsequently derived Skill instance and SOP orchestration is founded upon this contract.
+## 安装
 
-## 3. Architecture
+PROTO 是一个可移植的 skill 文件夹。
 
-```
-                        ┌─────────────────────────────────────┐
-   high-entropy         │           INTAKE                    │
-   context (logs,      │  sample by shape; keep traces only │  →  protocol drafts
-   chat, diffs,        └─────────────────────────────────────┘
-   handoff)                              │
-                                         ▼
-                        ┌─────────────────────────────────────┐
-                        │          EXTRACT                    │
-                        │  cluster → split → type → write     │  →  atomic protocols
-                        └─────────────────────────────────────┘
-                                         │
-                              ┌──────────┴──────────┐
-                              ▼                     ▼
-                   ┌──────────────────┐  ┌──────────────────────┐
-                   │   DISTILL         │  │   PROMOTE             │
-                   │ merge / split /  │  │ draft → observed →    │
-                   │ grade for clarity│  │ validated → promoted  │
-                   └──────────────────┘  └──────────────────────┘
-                                         │
-                                         ▼
-                        ┌─────────────────────────────────────┐
-                        │          COMPOSE                    │
-                        │  route, select, apply without        │  →  skill package
-                        │  reloading history                   │
-                        └─────────────────────────────────────┘
+**Codex / Claude Code 一键安装(推荐)**
+
+```powershell
+git clone https://github.com/NGC2632M44/proto.git
+cd proto
+powershell scripts\install_skill.ps1 -Both      # 同步到 cc + codex 两个 skill 根
+powershell scripts\init_store.ps1 -Both         # 建 ~/.protocols 并链接两个 runtime 到它
+powershell scripts\auto_capture_hook.ps1        # 装 PowerShell 失败命令自动采集钩子
 ```
 
-The package is deliberately **small and self-contained**: one `SKILL.md`, a `references/` library, and a `scripts/` validator. No build step. No runtime dependencies. The skill's entrance is the only thing that must stay small — everything else is promoted *out* of it on demand.
+**仅 lint(无运行时)**
 
-## 4. The Protocol as an Atomic Unit
-
-A protocol is the smallest repeatable unit: **one error pattern, one diagnosis path, one implementation route, one validation rule, one invariant, or one handoff recipe.** It carries its own trigger, scope, diagnosis, action path, validation check, and avoid-list — enough for a future agent to apply it without the original conversation.
-
-The full grammar lives in [`references/protocol-schema.md`](./references/protocol-schema.md). The shape, in brief:
-
-```markdown
-# P{slug} - {title}
-> Type: harness-error | tool-contract | environment | debugging-path
->      | implementation-path | validation | handoff | project-invariant | anti-pattern
-> Scope: global | tool:{name} | project:{name} | repo:{path}
-> Confidence: draft | observed | validated | promoted
-> Source: {conversation, log, file, project, PR, test run}
-
-## Symptom       What the user or agent sees.
-## Context       When this applies — OS, shell, tool, version, repo.
-## Diagnosis     Why the issue happened, or why this route worked.
-## Protocol      Repeatable steps or rules. Imperative.
-## Validation    How to confirm success next time.
-## Avoid         False fixes and conditions where this does not apply.
-## Promotion     Keep as draft | reference | SKILL.md | script | merge.
-```
-
-## 5. Installation
-
-PROTO ships as a portable skill folder. Drop it into your skills directory.
-
-**Codex / agent workspaces**
-```bash
-# from your skills root
-cp -r proto/ "$SKILLS_DIR/proto/"
-```
-
-**Standalone (lint any protocol folder)**
 ```bash
 git clone https://github.com/NGC2632M44/proto.git
 python proto/scripts/protocol_lint.py --self-test
 ```
 
-Requirements: a Markdown editor and Python 3.7+ for the linter. Nothing else.
+要求:Markdown 编辑器 + Python 3.7+。无其他依赖。
 
-## 6. Quick Start
+## 快速开始
 
 ```text
-You: Use $proto to extract protocols from this work session and decide what should become a skill.
+你: 用 $proto 从本次工作会话提取 protocol,并判断哪些应该成为 skill。
 ```
 
-PROTO selects one of five operating modes before writing:
+五个操作模式:
 
 | Mode | Action |
 |---|---|
-| `extract` | Convert logs, chat summaries, diffs, tests, or handoff notes into protocol files. |
-| `distill` | Merge, split, or grade existing protocols for clarity and reuse. |
-| `promote` | Decide which protocols belong in `SKILL.md`, `references/`, or `scripts/`. |
-| `compose` | Build or update a skill from a set of related protocols. |
-| `retrospect` | End a work session by capturing repeated errors, decisions, validation, and handoff. |
+| `extract` | 把日志、对话摘要、diff、测试、handoff 笔记转成 protocol 文件。 |
+| `distill` | 合并、拆分、分级现有 protocol。 |
+| `promote` | 决定哪些 protocol 进 `SKILL.md`/`references/`/`scripts/`。 |
+| `compose` | 从一组相关 protocol 构建或更新 skill。 |
+| `retrospect` | 会话结束时捕获重复错误、决策、验证与 handoff。 |
 
-For protocol files, read [`references/protocol-schema.md`](./references/protocol-schema.md) before drafting. For mechanical checks, run [`scripts/protocol_lint.py`](./scripts/protocol_lint.py) after edits.
+protocol 文件起草前读 [`references/protocol-schema.md`](./references/protocol-schema.md);编辑后跑 [`scripts/protocol_lint.py`](./scripts/protocol_lint.py)。
 
-## 7. Lifecycle: Intake → Extract → Distill → Promote → Compose
-
-**Intake** collects high-signal traces only: summaries, error snippets, command outputs, diffs, tests, PR comments. Raw logs stay out of protocol files — quote only the short error text needed for future recognition. Uncertainty is preserved: weak evidence is marked `draft` or `observed`, never promoted on faith.
-
-**Extract** clusters by trigger, splits to atomic units (one trigger, one reusable action path), assigns type and confidence, then writes the protocol and asks the reuse question: *could a future agent apply this without reading the original conversation?* If not, add context or downgrade confidence.
-
-**Distill** merges protocols that share trigger, context, fix, and validation; splits those that bundle multiple triggers; and downgrades confidence when evidence depends on memory or one-off local state.
-
-**Promote** uses the lightest durable form that solves the recurrence:
-
-| Evidence | Form |
-|---|---|
-| One unresolved or uncertain incident | Draft protocol |
-| One solved incident with clear context | Observed protocol |
-| Repeated issue or reproduced fix | Validated protocol |
-| Conditional knowledge useful only sometimes | Reference file |
-| High-frequency rule needed before acting | `SKILL.md` rule |
-| Fragile repeated operation with exact checks | Script |
-| Related protocols with stable triggers | New or updated skill |
-
-**Compose** keeps the skill entrance small: trigger-critical rules in `SKILL.md`, conditional detail in `references/`, deterministic checks in `scripts/`, templates in `assets/` only when needed.
-
-## 8. Validation & Linting
-
-`scripts/protocol_lint.py` is a zero-dependency validator. It enforces the schema: title shape, `Type`/`Confidence` enums, presence of `Scope` and `Source`, all seven required sections non-empty, and a guard against raw Windows backslash paths in inline code.
-
-```bash
-# validate one file or a whole folder
-python scripts/protocol_lint.py references/protocols/
-
-# built-in self-test
-python scripts/protocol_lint.py --self-test
-```
-
-A protocol is *not* ready until the linter is clean **and** a future agent could apply it without the original conversation.
-
-## 9. Repository Layout
+## 仓库布局
 
 ```
 proto/
-├── SKILL.md                       # triggers, routing, core workflow, top-priority rules
-├── LICENSE                        # MIT
-├── README.md                      # this document
-├── .gitignore
-├── agents/
-│   └── openai.yaml                # Codex discovery interface
+├── SKILL.md                       # 触发器、路由、核心流程、最高优先级规则
+├── agents/openai.yaml             # Codex 发现接口
 ├── references/
-│   ├── protocol-schema.md         # the grammar every protocol obeys
-│   └── rename.md                  # etymology note (Proto — The First Glue)
+│   ├── protocol-schema.md         # 每个 protocol 必须遵守的语法
+│   ├── routing.md                 # preflight 匹配、promote、auto-compose 规则
+│   ├── auto-capture.md            # collect/distill 拆分与闭环校验
+│   ├── cross-runtime.md           # 共享 store 设计与避坑
+│   └── protocols/                 # protocol 库 + INDEX.md 路由表
 └── scripts/
-    └── protocol_lint.py           # zero-dependency protocol validator + self-test
+    ├── preflight.py               # 路由器:操作文本 → 该读哪些 protocol
+    ├── protocol_lint.py           # 零依赖 protocol 校验器 + self-test
+    ├── collect_trace.py           # 无 LLM 的裸 trace 采集器
+    ├── pack.py                    # protocol pack 导出/导入(分享单元)
+    ├── install_skill.ps1          # 同步 skill 到运行时
+    ├── init_store.ps1             # 一键建 store + 链接 runtime
+    ├── link_store.ps1             # junction 各 runtime 到共享 store
+    ├── auto_capture_hook.ps1      # PowerShell 自动采集钩子(装/卸)
+    ├── sync_store.ps1 / .sh       # 跨机器 store 同步
+    └── publish.ps1                # 一键:同步 skill + commit + rebase + push
 ```
 
-The skill folder intentionally contains **no** README, changelog, installation guide, or process notes inside itself — those live here at the repository root, per the skill-package convention. The skill folder is the artifact; the repository is its documentation.
+skill 文件夹内部**不含** README/changelog/安装指南——那些在仓库根,skill 文件夹只是产物。
 
-## 10. Conventions & Privacy
+## 一键工作流(不依赖任何审批通道)
 
-- **No secrets.** The skill is authored to remove project secrets, local absolute paths, personal tokens, and raw conversation history before sharing. Example protocols use placeholder names; `protocol_lint.py` rejects raw `C:\` paths in inline code.
-- **No environment assumptions** unless they are the point of the protocol.
-- **Author identity is GitHub-noreply** to keep commits linkable without exposing a personal email.
-- **Uncertainty is a first-class field.** `draft` and `observed` are legitimate, published states — promoting them prematurely is the defect, not the hesitation.
+```powershell
+# 改完代码后同步已装 skill 并推 GitHub
+powershell scripts\publish.ps1 -Both -Message "your message"
 
-If you fork or adapt this skill, run the same privacy pass before publishing your own version.
+# 新机器一键配置
+powershell scripts\init_store.ps1 -Both
+powershell scripts\auto_capture_hook.ps1
+```
 
-## 11. Contributing
+## 校验与 Lint
 
-Contributions that **add or harden protocols** are welcome. Before opening a PR:
+`scripts/protocol_lint.py` 零依赖,强制 schema:标题形态、`Type`/`Confidence` 枚举、`Scope`/`Source` 必填、七个必填段非空、拒绝内联代码里的裸 Windows 反斜杠路径。
 
-1. Draft or edit under [`references/protocol-schema.md`](./references/protocol-schema.md).
-2. `python scripts/protocol_lint.py <your-file-or-folder>` must exit clean.
-3. Confirm the protocol is applicable without the original conversation — add context or downgrade confidence if not.
-4. Remove any local paths, tokens, or environment-specific assumptions.
+```bash
+python scripts/protocol_lint.py references/protocols/   # 校验整个文件夹
+python scripts/protocol_lint.py --self-test             # 内置自测
+```
 
-When protocols conflict, keep both only if each has a distinct context; otherwise prefer the newer validated protocol and record why the older rule is superseded.
+一个 protocol 在 lint 干净 **且** 脱离原对话可用之前,不算就绪。
 
-## 12. Cross-Runtime Sync
+## 理念与愿景
 
-A protocol learned in Claude Code should protect the next Codex session. Keep **one canonical store** at $PROTO_STORE (default ~/.protocols) holding protocols/ (P-*.md + INDEX) and inbox/. Mount it into each runtime''s proto skill eferences/protocols via a junction (Windows, no admin) or symlink (POSIX); or let preflight.py route there via the PROTO_STORE env var without a link.
+### 个性化自迭代
 
-- scripts/sync_store.ps1 / sync_store.sh re-establish mounts across ~/.claude/skills/proto and ~/.codex/skills/proto, with optional git pull/push for cross-machine and community sync.
-- The skill **engine** (SKILL.md / scripts) stays versioned per-runtime (small, stable); only the **fuel** (protocols) is shared. Writes from either runtime land in one store, so a trigger-keyword learned in Codex immediately protects a Claude Code session.
+本仓库只交付**引擎**与少量示例 protocol。真正有价值的 protocol 是你在自己工作里踩出来的——它跟着你迭代,越用越懂你的环境、你的栈、你的偏好。所以**协议库不必同步回上游**:它是你私人的端智能,自己喂自己。proto 的设计就是让"采集—蒸馏—复用"这条闭环足够便宜,能始终在后台跑。
 
-Full procedure and pitfalls: [eferences/cross-runtime.md](./references/cross-runtime.md).
+### 社区化与市场化
 
-## 13. Auto-Capture
+protocol 是最小单元,pack 是流通货币。设想:
 
-Manual $proto extract leaks most pitfalls; always-on LLM summarization is a token sink. PROTO splits the two:
+- **protocol packs** 像 npm 包一样发布——"我的 Windows + 代理 + gh 踩坑集"、"我的 React 性能调优路径集"。
+- 消费者 `pack.py import` 一行导入,碰撞时自动重键关键词,不打架。
+- **skill 是个性化组合**:同一组 pack,不同用户按自己的工作流 compose 出不同 skill。
+- 成熟 protocol 组可以沉淀成**面向某领域/某工具的 skill**对外发布,而底层的 pack 仍可被他人重组。
 
-- **Collect (cheap, always-on, no LLM).** scripts/collect_trace.py appends a raw trace (command + exit + up to 8 stderr lines + cwd + runtime + ts) to $PROTO_STORE/inbox/ on cheap signals: nonzero exit, known error regex (InputValidationError, GBK/UnicodeDecodeError, schannel, gh 403/422, 	imeout), or preflight NO_MATCH-then-fail / recurrence.
-- **Distill (LLM, on-demand, batched).** $proto extract runs on the inbox only on explicit request, an inbox-size gate (ls | wc, no LLM), or session-end etrospect with a bounded budget.
-- **Validity gate (closed loop).** A distilled protocol must (1) pass protocol_lint.py, (2) be applicable without the original chat, and (3) **replay-match**: preflight.py run on the captured trace must route back to the protocol that distilled it. Failing check 3 means the trigger-keywords are wrong and it will never fire 鈥?fix the keywords, not the trace.
+这样,经验不再锁在某个人的脑子里或某次会话里:吃一堑的是一个人,长一智的是整个社区。少造重复的轮子,把节省的 token 和时间还给真正的创造。
 
-Full procedure and signal list: [eferences/auto-capture.md](./references/auto-capture.md).
+## 隐私与规范
 
-## 14. Sharing Protocols (Roadmap)
+- **无 secrets。** 发布前移除项目密钥、本地绝对路径、个人 token、原始对话历史。示例 protocol 用占位名;`protocol_lint.py` 拒绝内联代码里的裸 `C:\` 路径。
+- **无环境假设**,除非它是 protocol 的核心。
+- **作者身份用 GitHub-noreply**,保持可链接而不暴露个人邮箱。
+- **不确定性是一等公民。** `draft`/`observed` 是合法的公开状态;过早 promote 才是缺陷。
 
-A protocol is a portable unit. A *protocol pack* = a folder of P-*.md + an INDEX.md snippet + provenance (Source, Confidence). Publish a pack as a git repo; consumers import it by merging files into their $PROTO_STORE/protocols/ and re-keying trigger-keywords on collision. Skills stay public-facing and deliberate 鈥?composition proposes, the human publishes. The marketplace direction: protocol packs as the community currency, composed into per-user skills.
+Fork 或改编本 skill 时,发布前请跑同样的隐私检查。
 
-## 15. License
+## 贡献
+
+欢迎**新增或加强 protocol**(以 pack 形式)、修复脚本、改进 schema。PR 前:
+
+1. 按 [`references/protocol-schema.md`](./references/protocol-schema.md) 起草。
+2. `python scripts/protocol_lint.py <你的文件或文件夹>` 干净退出。
+3. 确认 protocol 脱离原对话可用——否则补 context 或降级 confidence。
+4. 移除本地路径、token、环境特定假设。
+
+protocol 冲突时,仅当各自 context 不同才保留两者;否则优先更新的 validated protocol 并记录旧规则被取代的理由。
+
+## License
 
 MIT © [NGC2632M44](https://github.com/NGC2632M44). See [`LICENSE`](./LICENSE).
 
 ---
 
-<div align="center">
-
-*PROTO is the first drop of glue between chaotic context and deterministic action.*
-
-</div>
+*吃一堑,长一智。少造一个重复的轮子,就是给所有人省下一段重复的时间。*
