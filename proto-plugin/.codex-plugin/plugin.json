@@ -1,0 +1,28 @@
+{
+  "name": "proto-plugin",
+  "version": "0.1.0",
+  "description": "Turn lived work into reusable protocols. Collect failed-command traces, run preflight before risky ops, lint protocols, manage packs, and gather retrospect material -- via a bundled stdio MCP server, on-demand.",
+  "author": {
+    "name": "NGC2632M44",
+    "url": "https://github.com/NGC2632M44/proto"
+  },
+  "repository": "https://github.com/NGC2632M44/proto",
+  "license": "MIT",
+  "keywords": ["protocol", "memory", "retrospect", "lessons-learned", "automation"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Proto",
+    "shortDescription": "Forge reusable protocols into skills. AFK by design.",
+    "longDescription": "Proto distills lived engineering work into the smallest reusable unit (a protocol), runs cheap preflight before risky operations, auto-collects failed-command traces, and gathers retrospect material -- all exposed as on-demand MCP tools. Never step in the same pit twice.",
+    "developerName": "NGC2632M44",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": [
+      "Before risky ops, run preflight on the command.",
+      "Collect a trace for any failed command.",
+      "At session end, gather a retrospect and draft protocols."
+    ],
+    "brandColor": "#1f6f3b"
+  }
+}

@@ -22,6 +22,7 @@ Living index of extracted protocols. Each entry is one atomic, reusable unit fol
 
 ## sharing
 - [P-proto-protocol-pack](./P-proto-protocol-pack.md) — [pack, export, import, marketplace, share, collision, re-key, PACK.md] Protocol packs (P-*.md + INDEX snippet + PACK.md provenance) are the sharing unit; pack.py exports/imports, re-keying on collision.
+- [P-proto-codex-integration](./P-proto-codex-integration.md) — [codex, plugin, mcp, mcp-server, stdio, summary-strip, session-end, automation, retrospect] Three integration shapes (skill/plugin/MCP) sharing one engine; MCP is on-demand stdio not daemon; do not target Codex's private summary strip.
 ---
 
 Maintenance rules:
