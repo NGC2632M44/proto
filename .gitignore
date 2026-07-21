@@ -1,0 +1,36 @@
+# Operating-system artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets / environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local logs and traces (protocols keep only short quoted error text)
+*.log
+logs/

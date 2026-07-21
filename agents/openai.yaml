@@ -1,0 +1,4 @@
+interface:
+  display_name: "Proto"
+  short_description: "Forge reusable protocols into skills."
+  default_prompt: "Use $proto to extract protocols from this work session and decide what should become a skill."
