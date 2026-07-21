@@ -5,8 +5,11 @@ Living index of extracted protocols. Each entry is one atomic, reusable unit fol
 ## tool-contract
 - [P-gh-repo-create-remote](./P-gh-repo-create-remote.md) — [gh, gh-repo-create, remote, origin, Unable-to-add-remote] `gh repo create --remote=origin` reports "Unable to add remote" when origin already exists; the repo is still created. Cosmetic failure.
 
+## harness-error
+- [P-win-ps-setcontent-utf8-bom](./P-win-ps-setcontent-utf8-bom.md) — [powershell, Set-Content, utf8, BOM, ufeff, index.lock, lint, title] Set-Content -Encoding utf8 on PS 5.x writes a BOM that breaks ^# regex/lint; use [IO.File]::WriteAllText.
 ## environment
 - [P-win-git-push-retry](./P-win-git-push-retry.md) — [git-push, force-push, 443, schannel, proxy, Windows, timeout] Transient `port 443` / `schannel` push failures on a proxied Windows host; retry in a loop, verify via the host API.
+- [P-codex-sandbox-readonly-git](./P-codex-sandbox-readonly-git.md) — [git, index.lock, Permission-denied, sandbox, fetch-first, 443, codex, escalated] Git writes fail in Codex workspace-write sandbox (.git read-only, network blocked); restore via git show, escalate for add/commit/push, rebase not force.
 
 ## implementation-path
 - [P-git-history-squash](./P-git-history-squash.md) — [git-history, squash, force-push, orphan, Initial-commit, public-push] Erase authoring/rename traces before a public push via an orphan branch + force-push; one clean "Initial commit".
