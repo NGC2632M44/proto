@@ -20,6 +20,8 @@ Living index of extracted protocols. Each entry is one atomic, reusable unit fol
 - [P-proto-collect-distill-split](./P-proto-collect-distill-split.md) — [proto, auto-capture, collect, distill, inbox, trace, token-cost] Split always-on cheap trace collection from on-demand LLM distillation; closed-loop replay match validates a distilled protocol.
 - [P-proto-shared-protocol-store](./P-proto-shared-protocol-store.md) — [proto, cross-runtime, PROTO_STORE, junction, symlink, cc, codex, sync] One canonical protocol store mounted into each runtime's skill; engine per-runtime, fuel shared.
 
+## sharing
+- [P-proto-protocol-pack](./P-proto-protocol-pack.md) — [pack, export, import, marketplace, share, collision, re-key, PACK.md] Protocol packs (P-*.md + INDEX snippet + PACK.md provenance) are the sharing unit; pack.py exports/imports, re-keying on collision.
 ---
 
 Maintenance rules:
