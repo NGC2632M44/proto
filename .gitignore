@@ -41,3 +41,5 @@ COMMIT_PROTO_MSG.txt
 
 # firecrawl skill cache
 .firecrawl/
+
+graphify-out/
